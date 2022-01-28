@@ -1,4 +1,6 @@
 const router = require('express').Router();
+const Auth = require('./auth-model')
+const bcrypt = require('bcryptjs')
 
 router.post('/register', (req, res) => {
   res.end('implement register, please!');
@@ -12,7 +14,7 @@ router.post('/register', (req, res) => {
         "username": "Captain Marvel", // must not exist already in the `users` table
         "password": "foobar"          // needs to be hashed before it's saved
       }
-
+    
     2- On SUCCESSFUL registration,
       the response body should have `id`, `username` and `password`:
       {
