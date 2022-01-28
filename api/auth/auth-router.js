@@ -1,9 +1,9 @@
 const router = require('express').Router();
 const Auth = require('./auth-model')
 const bcrypt = require('bcryptjs')
+const { BCRYPT_ROUNDS, JWT_SECRET } = require("../secrets") // use this secret!
 
 router.post('/register', (req, res) => {
-  res.end('implement register, please!');
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -29,6 +29,31 @@ router.post('/register', (req, res) => {
     4- On FAILED registration due to the `username` being taken,
       the response body should include a string exactly as follows: "username taken".
   */
+      const user = req.body
+      const hash = bcrypt.hashSync(user.password, BCRYPT_ROUNDS)
+      const username = user.username
+      user.password = hash
+
+      if(!username || !user.password) {
+        return res.status(400).json({ message: 'username and password required'})
+      }
+      const userNameUser = Auth.findBy({username})
+      if(userNameUser) {
+        return res.status(400).json({ message: 'username taken'})
+      }
+
+  Auth.add(user)
+    .then( savedUser => {
+      res.status(201).json(savedUser)
+    })
+    .catch( err => {
+      const username = user.username
+      const userNameUser = Auth.findBy({username})
+      if(userNameUser) {
+        return res.status(201).json({ message: 'username taken'})
+      }
+    })
+    return res.status(400).json({ message: 'username taken'})
 });
 
 router.post('/login', (req, res) => {
@@ -56,6 +81,33 @@ router.post('/login', (req, res) => {
     4- On FAILED login due to `username` not existing in the db, or `password` being incorrect,
       the response body should include a string exactly as follows: "invalid credentials".
   */
+
+      const user = req.body
+      const hash = bcrypt.hashSync(user.password, BCRYPT_ROUNDS)
+      const username = user.username
+      user.password = hash
+
+      if(!username || !user.password) {
+        return res.status(400).json({ message: 'username and password required'})
+      }
+      const userNameUser = Auth.findBy({username})
+      if(userNameUser) {
+        return res.status(400).json({ message: 'username taken'})
+      }
+
+  Auth.add(user)
+    .then( savedUser => {
+      res.status(201).json(savedUser)
+    })
+    .catch( err => {
+      const username = user.username
+      const userNameUser = Auth.findBy({username})
+      if(userNameUser) {
+        return res.status(201).json({ message: 'username taken'})
+      }
+    })
+    return res.status(400).json({ message: 'username taken'})
+
 });
 
 module.exports = router;
