@@ -1,6 +1,7 @@
 const router = require('express').Router();
-const Auth = require('./auth-model')
+const User = require('./User-model')
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 const { BCRYPT_ROUNDS, JWT_SECRET } = require("../secrets") // use this secret!
 
 router.post('/register', (req, res) => {
@@ -29,31 +30,28 @@ router.post('/register', (req, res) => {
     4- On FAILED registration due to the `username` being taken,
       the response body should include a string exactly as follows: "username taken".
   */
-      const user = req.body
-      const hash = bcrypt.hashSync(user.password, BCRYPT_ROUNDS)
-      const username = user.username
-      user.password = hash
+  const user = req.body
+  const hash = bcrypt.hashSync(user.password, BCRYPT_ROUNDS)
+  const username = user.username
 
-      if(!username || !user.password) {
-        return res.status(400).json({ message: 'username and password required'})
-      }
-      const userNameUser = Auth.findBy({username})
-      if(userNameUser) {
-        return res.status(400).json({ message: 'username taken'})
-      }
-
-  Auth.add(user)
+  if(!username || !user.password) {
+    return res.status(400).json({ message: 'username and password required'})
+  }
+  User.findBy({username})
+    .then( usernameUser => {
+      return res.status(400).json({ message: 'username taken'})
+    })
+    .catch( err => {
+      console.log(err)
+    })
+  user.password = hash
+  User.add(user)
     .then( savedUser => {
       res.status(201).json(savedUser)
     })
     .catch( err => {
-      const username = user.username
-      const userNameUser = Auth.findBy({username})
-      if(userNameUser) {
-        return res.status(201).json({ message: 'username taken'})
-      }
+      res.status(500).json({ message: err.message})
     })
-    return res.status(400).json({ message: 'username taken'})
 });
 
 router.post('/login', (req, res) => {
@@ -71,7 +69,7 @@ router.post('/login', (req, res) => {
     2- On SUCCESSFUL login,
       the response body should have `message` and `token`:
       {
-        "message": "welcome, Captain Marvel",
+        message: "welcome, Captain Marvel",
         "token": "eyJhbGciOiJIUzI ... ETC ... vUPjZYDSa46Nwz8"
       }
 
@@ -81,33 +79,34 @@ router.post('/login', (req, res) => {
     4- On FAILED login due to `username` not existing in the db, or `password` being incorrect,
       the response body should include a string exactly as follows: "invalid credentials".
   */
-
-      const user = req.body
-      const hash = bcrypt.hashSync(user.password, BCRYPT_ROUNDS)
-      const username = user.username
-      user.password = hash
-
-      if(!username || !user.password) {
+      let { username, password } = req.body
+      
+      if(!username || !password) {
         return res.status(400).json({ message: 'username and password required'})
       }
-      const userNameUser = Auth.findBy({username})
-      if(userNameUser) {
-        return res.status(400).json({ message: 'username taken'})
-      }
 
-  Auth.add(user)
-    .then( savedUser => {
-      res.status(201).json(savedUser)
-    })
-    .catch( err => {
-      const username = user.username
-      const userNameUser = Auth.findBy({username})
-      if(userNameUser) {
-        return res.status(201).json({ message: 'username taken'})
-      }
-    })
-    return res.status(400).json({ message: 'username taken'})
-
+      User.findBy({ username })
+        .then(([user]) => {
+          if (user && bcrypt.compareSync(password, user.password)) {
+            const payload = {
+              id: user.id,
+              username: user.username,
+            }
+            const options = {
+              expiresIn: '1d',
+            }
+            const token = jwt.sign(payload, JWT_SECRET, options)
+            res.status(200).json({
+              message: `welcome, ${user.username}`,
+              "token": token
+            })
+          } else {
+            res.status(401).json({ message: 'invalid credentials' })
+          }
+        })
+        .catch( err => {
+          res.status(401).json({ message: 'invalid credentials' })
+        })
 });
 
 module.exports = router;
