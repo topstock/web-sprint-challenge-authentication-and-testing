@@ -51,11 +51,11 @@ describe('POST /auth/login', () => {
   test('returns a status 200 OK', async () => {
     await request(server)
       .post('/api/auth/register')
-      .send({'username':'Bloom','password':'Lorem Ipsum'})
+      .send({'username':'Bloom','password':'Tech'})
     const res = await request(server)
       .post('/api/auth/login')
-      .send({'username':'Bloom','password':'Lorem Ipsum'})
-    expect(res.status).toBe(200)
+      .send({'username':'Bloom','password':'Tech'})
+      expect(res.status).toBe(200)
   })
 
   test('wrong password returns status 401', async () => {
@@ -83,11 +83,13 @@ describe('GET /jokes', () => {
     await request(server)
       .post('/api/auth/register')
       .send({'username':'Bloom','password':'Tech'})
-    await request(server)
+    const loginRes = await request(server)
       .post('/api/auth/login')
       .send({'username':'Bloom','password':'Tech'})
+    const token = loginRes.body.token
     const res = await request(server)
       .get('/api/jokes')
+      .set({ 'Authorization': token })
     expect(res.status).toBe(200)
   })
 })
