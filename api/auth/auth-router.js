@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { BCRYPT_ROUNDS, JWT_SECRET } = require("../secrets") // use this secret!
 
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -37,25 +37,24 @@ router.post('/register', (req, res) => {
   if(!username || !user.password) {
     return res.status(400).json({ message: 'username and password required'})
   }
-  User.findBy({username})
-    .then( usernameUser => {
-      return res.status(400).json({ message: 'username taken'})
-    })
-    .catch( err => {
+  const usernameUser = await User.findBy({username})
+    try{
+      if(usernameUser[0]) {
+        return res.status(400).json({ message: 'username taken'})
+      } 
+    } catch (err){
       console.log(err)
-    })
+    }
   user.password = hash
-  User.add(user)
-    .then( savedUser => {
-      res.status(201).json(savedUser)
-    })
-    .catch( err => {
-      res.status(500).json({ message: err.message})
-    })
+  const savedUser = await User.add(user)
+    try {
+      return res.status(201).json(savedUser)
+    } catch (err) {
+      return res.status(500).json({ message: err.message})
+    }
 });
 
-router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+router.post('/login', async (req, res) => {
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -85,9 +84,9 @@ router.post('/login', (req, res) => {
         return res.status(400).json({ message: 'username and password required'})
       }
 
-      User.findBy({ username })
-        .then(([user]) => {
-          if (user && bcrypt.compareSync(password, user.password)) {
+      const usernameUsers = await User.findBy({ username })
+        try{
+          if (usernameUsers[0] && bcrypt.compareSync(password, usernameUsers[0]["password"])) {
             const payload = {
               id: user.id,
               username: user.username,
@@ -103,10 +102,9 @@ router.post('/login', (req, res) => {
           } else {
             res.status(401).json({ message: 'invalid credentials' })
           }
-        })
-        .catch( err => {
+        } catch (err) {
           res.status(401).json({ message: 'invalid credentials' })
-        })
+        }
 });
 
 module.exports = router;

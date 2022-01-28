@@ -9,17 +9,16 @@ function findBy(filter) {
 }
 function findById(id) {
     return db('users')
-    .select('id','username')
     .where('id', id)
   }
 
 async function add(user) { 
   const newIds = await db('users')
     .insert(user)
-  return findById(newIds[0])
+  return findById(newIds[0]).first()
 }
 
-module.exports {
+module.exports = {
     find,
     findBy,
     findById,
