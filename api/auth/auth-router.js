@@ -85,9 +85,8 @@ router.post('/login', async (req, res) => {
       }
 
       const usernameUsers = await User.findBy({ username })
-      const user = usernameUsers[0]
         try{
-          if (user && bcrypt.compareSync(password, user["password"])) {
+          if (usernameUsers[0] && bcrypt.compareSync(password, usernameUsers[0]["password"])) {
             const payload = {
               id: user.id,
               username: user.username,
@@ -96,15 +95,15 @@ router.post('/login', async (req, res) => {
               expiresIn: '1d',
             }
             const token = jwt.sign(payload, JWT_SECRET, options)
-            return res.status(200).json({
+            res.status(200).json({
               message: `welcome, ${user.username}`,
-              'token': token
+              "token": token
             })
           } else {
-            return res.status(401).json({ message: 'invalid credentials' })
+            res.status(401).json({ message: 'invalid credentials' })
           }
         } catch (err) {
-          return res.status(401).json({ message: 'invalid credentials' })
+          res.status(401).json({ message: 'invalid credentials' })
         }
 });
 
