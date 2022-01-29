@@ -86,7 +86,10 @@ router.post('/login', async (req, res) => {
 
       const usernameUsers = await User.findBy({ username })
         try{
-          if (usernameUsers[0] && bcrypt.compareSync(password, usernameUsers[0]["password"])) {
+          const user = usernameUsers[0]
+          const isCorrectPassword = bcrypt.compareSync(password, user["password"])
+          console.log(isCorrectPassword)
+          if (user && isCorrectPassword) {
             const payload = {
               id: user.id,
               username: user.username,
