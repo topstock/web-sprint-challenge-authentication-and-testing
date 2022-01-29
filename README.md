@@ -55,16 +55,14 @@ Be prepared to demonstrate your understanding of this week's concepts by answeri
 
 1. Differences between using _sessions_ or _JSON Web Tokens_ for authentication.
 
-sessions utilize cookies which are stored on clients.  Servers maintain a store of session data.  The store expires the sessions at predetermined times usually in 24 hours.  Each HTTP request from an athenticated client to that server carries the cookie regardless of relevance.
+Sessions utilize cookies which are stored in memory prefereably on a separate server, the memory cache server. The cache server maintains the session data and stores it with the session key. The api server keeps a key and uses it to pull session information from the cache.  The cache and server sessions expire at predetermined times often in 24 hours.  Each HTTP request between a an athenticated client and a server carries the cookie regardless of relevance. The server's cookie only holds the session id.  They are complex, but they help backup dataand you don't have to remember to delete them when designing an app.
 
-However web tokens are timestamped client data prepended with a header and appended with a signiture which includes a secret specific to the api, all of which is given a salt.that cannot be decrypted without a secret that is not shared off of the  hashes a header containing the algorithm and a key indicating that that the hash encrypted sequence is a web token.  It appends that to a hashed passwords by adding a secret 
+However web tokens are timestamped name-id pairs prepended with a header identifying it's type and algorithm and appended with a signiture which includes an encryption of the former data and a secret specific to the api. The password is never shared and the secret cannot be decoded, however if a client shares the JWT, it would give access to the same data on the server that that client had.  JWT can be used selectively, but they take time to verify and may require an extra process to delete.
 
-
-Cookies and web tokens can be deleted from the client.
 
 2. What does `bcryptjs` do to help us store passwords in a secure manner?
 
-   bcrypt hashes a header containing the algorithm and a key indicating that that the hash encrypted sequence is a web token.  It appends that to a hashed passwords by adding a secret, a timestamp, and  
+   bcryptjs hashes passwords for storage.  Thus leaks from the database will not contain actual passwords. 
 
 3. How are unit tests different from integration and end-to-end testing?
 
@@ -77,3 +75,5 @@ Cookies and web tokens can be deleted from the client.
 
 
 4. How does _Test Driven Development_ change the way we write applications and tests?
+
+    Answer: Test Driven Development requires that we think of functionality before form. Write the tests, then onnly code the smallest module that passes the test. Thus every piece of code contributes to a passing test.  If the tests are written well, the code will be very efficient.  
